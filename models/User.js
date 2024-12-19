@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String },
   dob: { type: Date },
   panNo: { type: String, default: "" },
-  mobileNumber: { type: String },
+  mobileNumber: { type: String, unique: true, sparse: true }, // Allow multiple null values
   otp: { type: String },
   verified: { type: Boolean, default: false },
   activeSubscriptions: [
