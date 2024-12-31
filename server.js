@@ -12,6 +12,7 @@ const fundRoutes = require('./routes/fund.routes');
 const productRoutes = require('./routes/product.routes');
 const subscriptionRoutes = require('./routes/subscription.routes');
 const blogRoutes = require('./routes/blog.routes'); 
+const stockRoutes = require('./routes/stockRoutes');
 dotenv.config(); // Load environment variables
 const app = express();
 
@@ -40,6 +41,9 @@ app.use('/api/products', productRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/stocks', stockRoutes);
+
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
