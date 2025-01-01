@@ -13,6 +13,7 @@ const productRoutes = require('./routes/product.routes');
 const subscriptionRoutes = require('./routes/subscription.routes');
 const blogRoutes = require('./routes/blog.routes'); 
 const stockRoutes = require('./routes/stockRoutes');
+const emailRoutes = require('./routes/emailRoutes');
 dotenv.config(); // Load environment variables
 const app = express();
 
@@ -42,7 +43,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/stocks', stockRoutes);
-
+app.use('/api/emails', emailRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
