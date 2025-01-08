@@ -27,7 +27,7 @@ exports.refreshFundsInProduct = async (req, res) => {
 
       const yahooSymbol = company.yahooSymbol;
       try {
-        const yfinanceResponse = await axios.get(`http://localhost:3000/api/yfinance/${yahooSymbol}`);
+        const yfinanceResponse = await axios.get(`https://backend-kve8.onrender.com/api/yfinance/${yahooSymbol}`);
         const currentPrice = yfinanceResponse.data.price;
         // console.log(`Fetched price for ${fund.name}:`, currentPrice);
 
@@ -119,16 +119,74 @@ exports.updateDailyValue = async (req, res) => {
 };
 
 // Create a product
+// Create a product - Updated to handle subtype
 exports.createProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
-    await product.save();
-    res.status(201).json(product);
+    // Log the incoming request data
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
+    const { name, description, subDescription, type, subtype, risk } = req.body;
+    const iconImage = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // Validate required fields
+    if (!name || !type || !risk) {
+      return res.status(400).json({ 
+        message: 'Name, type, and risk are required fields' 
+      });
+    }
+
+    // Create new product
+    const product = new Product({
+      name,
+      description,
+      subDescription,
+      type,
+      subtype,
+      risk,
+      iconImage,
+      funds: [] // Initialize empty funds array
+    });
+
+    // Save the product
+    const savedProduct = await product.save();
+    console.log('Product saved:', savedProduct);
+
+    res.status(201).json(savedProduct);
   } catch (error) {
+    console.error('Error creating product:', error);
     res.status(400).json({ message: error.message });
   }
 };
 
+// Update product details - Updated to handle subtype
+exports.updateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { name, description, subDescription, type, subtype, risk } = req.body;
+
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      {
+        name,
+        description,
+        subDescription,
+        type,
+        subtype,
+        risk
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json(updatedProduct);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 // Add fund to product
 exports.addFundToProduct = async (req, res) => {
   try {
@@ -167,7 +225,7 @@ exports.getProductById = async (req, res) => {
 
 exports.getProductDailyValue = async (req,res) =>{
   try {
-    const dailyValues = await ProductValueRecord.findById(req.params.productId).populate('productvaluerecords');
+    const dailyValues = await ProductValueRecord.findById(req.params.productId).populate('totalValue');
     if(!dailyValues)return res.status(404).json({ message: 'Product not found' });
     res.status(200).json(dailyValues);
   } catch (error) {

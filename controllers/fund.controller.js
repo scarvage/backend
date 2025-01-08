@@ -4,9 +4,11 @@ const Company = require('../models/companyModel');
 const axios = require('axios'); 
 
 // Function to add a fund to a product
+// Function to add a fund to a product
 exports.addFundToProduct = async (req, res) => {
   const { productId } = req.params;
   const { companyName, allocationPercent, entryPrice } = req.body;
+  const icon = req.file ? `/uploads/${req.file.filename}` : null; // Get icon path if uploaded
 
   try {
     // Step 1: Fetch fund details from the Company collection
@@ -17,20 +19,20 @@ exports.addFundToProduct = async (req, res) => {
 
     // Step 2: Fetch fund price from the Yahoo Finance API
     const yahooSymbol = company.yahooSymbol;
-    const yfinanceResponse = await axios.get(`http://localhost:3000/api/yfinance/${yahooSymbol}`);
+    const yfinanceResponse = await axios.get(`https://backend-kve8.onrender.com/api/yfinance/${yahooSymbol}`);
     
     const fundPrice = yfinanceResponse.data.price;
     if (!fundPrice) {
       return res.status(400).json({ message: 'Price not found for the fund' });
     }
 
-    // Calculate investment and number of shares based on the entry price and allocation percentage
-    const startingCapital = 100000; // Example starting capital; replace with actual capital as needed
+    // Calculate investment and number of shares
+    const startingCapital = 100000;
     const investment = (allocationPercent / 100) * startingCapital;
     const numberOfShares = investment / entryPrice;
     const latestValue = numberOfShares * fundPrice;
 
-    // Step 3: Create a new Fund object
+    // Step 3: Create a new Fund object with icon
     const newFund = new Fund({
       name: company.nameOfCompany,
       nseSymbol: company.nseSymbol,
@@ -41,7 +43,8 @@ exports.addFundToProduct = async (req, res) => {
       entryPrice,
       investment,
       numberOfShares,
-      latestValue
+      latestValue,
+      icon // Add the icon path
     });
 
     // Step 4: Save the new fund to the database
@@ -56,7 +59,6 @@ exports.addFundToProduct = async (req, res) => {
     product.funds.push(savedFund._id);
     await product.save();
 
-    // Step 6: Return success response
     return res.status(200).json({
       message: 'Fund added to product successfully',
       product,
@@ -64,6 +66,33 @@ exports.addFundToProduct = async (req, res) => {
     });
   } catch (error) {
     console.error('Error adding fund to product:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Function to update fund icon
+exports.updateFundIcon = async (req, res) => {
+  const { fundId } = req.params;
+  const icon = req.file ? `/uploads/${req.file.filename}` : null;
+
+  try {
+    if (!icon) {
+      return res.status(400).json({ message: 'No icon file provided' });
+    }
+
+    const updatedFund = await Fund.findByIdAndUpdate(
+      fundId,
+      { icon },
+      { new: true }
+    );
+
+    if (!updatedFund) {
+      return res.status(404).json({ message: 'Fund not found' });
+    }
+
+    return res.status(200).json(updatedFund);
+  } catch (error) {
+    console.error('Error updating fund icon:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
