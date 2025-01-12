@@ -15,6 +15,7 @@ const blogRoutes = require('./routes/blog.routes');
 const stockRoutes = require('./routes/stockRoutes');
 const emailRoutes = require('./routes/emailRoutes');
 const digilockerRoute = require("./routes/digilockerRoute");
+const geminiRoutes = require('./routes/geminiRoutes');
 dotenv.config(); // Load environment variables
 const app = express();
 
@@ -32,12 +33,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/data', companyRoutes);
 app.use('/api/yfinance', yfinance);
+
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
+app.use('/api/gemini', geminiRoutes);
 app.use('/api/funds', fundRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
